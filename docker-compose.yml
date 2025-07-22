@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  tvproxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "7860:7860"
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
