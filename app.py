@@ -998,7 +998,7 @@ def get_daddylive_base_url():
 
     try:
         app.logger.info("Fetching dynamic DaddyLive base URL from GitHub...")
-        github_url = 'https://raw.githubusercontent.com/thecrewwh/dl_url/refs/heads/main/dl.xml'
+        github_url = 'https://raw.githubusercontent.com/nzo66/dlhd_url/refs/heads/main/dlhd.xml'
         
         # Force direct connection for GitHub (no proxy)
         response = requests.get(
@@ -1169,7 +1169,7 @@ def resolve_m3u8_link(url, headers=None):
     final_headers_for_resolving = {**final_headers, **daddylive_headers}
 
     try:
-        github_url = 'https://raw.githubusercontent.com/thecrewwh/dl_url/refs/heads/main/dl.xml'
+        github_url = 'https://raw.githubusercontent.com/nzo66/dlhd_url/refs/heads/main/dlhd.xml'
         main_url_req = requests.get(
             github_url,
             timeout=10,  # Timeout ridotto per GitHub
