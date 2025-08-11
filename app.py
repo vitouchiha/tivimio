@@ -851,9 +851,8 @@ def get_proxy_for_url(url):
     
     # Controlla se è un URL DaddyLive
     is_daddylive = (
-        'newkso.ru' in url.lower() or 
-        '/stream-' in url.lower() or
-        re.search(r'/premium(\d+)/mono\.m3u8$', url) is not None
+        'newkso.ru' in url.lower() or
+        re.search(r'stream-\d+', url.lower()) is not None
     )
     
     # Se è DaddyLive, usa i proxy specifici
@@ -992,38 +991,25 @@ def get_daddylive_base_url():
     """Fetches and caches the dynamic base URL for DaddyLive."""
     global DADDYLIVE_BASE_URL, LAST_FETCH_TIME
     current_time = time.time()
-    
     if DADDYLIVE_BASE_URL and (current_time - LAST_FETCH_TIME < FETCH_INTERVAL):
         return DADDYLIVE_BASE_URL
 
+    # Segui solo i redirect di DADDYLIVE_BASE_URL
     try:
-        app.logger.info("Fetching dynamic DaddyLive base URL from GitHub...")
-        github_url = 'https://raw.githubusercontent.com/nzo66/dlhd_url/refs/heads/main/dlhd.xml'
-        
-        # Force direct connection for GitHub (no proxy)
-        response = requests.get(
-            github_url,
-            timeout=REQUEST_TIMEOUT,
-            proxies=None,  # Force direct connection
-            verify=VERIFY_SSL
-        )
+        base_url = DADDYLIVE_BASE_URL or "https://daddylive.sx/"
+        response = requests.get(base_url, timeout=REQUEST_TIMEOUT, allow_redirects=True, verify=VERIFY_SSL)
         response.raise_for_status()
-        content = response.text
-        match = re.search(r'src\s*=\s*"([^"]*)"', content)
-        if match:
-            base_url = match.group(1)
-            if not base_url.endswith('/'):
-                base_url += '/'
-            DADDYLIVE_BASE_URL = base_url
-            LAST_FETCH_TIME = current_time
-            app.logger.info(f"Dynamic DaddyLive base URL updated to: {DADDYLIVE_BASE_URL}")
-            return DADDYLIVE_BASE_URL
-    except requests.RequestException as e:
-        app.logger.error(f"Error fetching dynamic DaddyLive URL: {e}. Using fallback.")
-    
-    DADDYLIVE_BASE_URL = "https://daddylive.sx/"
-    app.logger.info(f"Using fallback DaddyLive URL: {DADDYLIVE_BASE_URL}")
-    return DADDYLIVE_BASE_URL
+        final_url = response.url
+        if not final_url.endswith('/'):
+            final_url += '/'
+        DADDYLIVE_BASE_URL = final_url
+        LAST_FETCH_TIME = current_time
+        app.logger.info(f"DaddyLive base URL resolved to: {DADDYLIVE_BASE_URL}")
+        return DADDYLIVE_BASE_URL
+    except Exception as e:
+        DADDYLIVE_BASE_URL = "https://daddylive.sx/"
+        app.logger.info(f"Using fallback DaddyLive URL: {DADDYLIVE_BASE_URL}")
+        return DADDYLIVE_BASE_URL
 
 get_daddylive_base_url()
 
@@ -1120,10 +1106,8 @@ def resolve_m3u8_link(url, headers=None):
     #    o "/stream-", altrimenti viene passato direttamente.
     
     is_daddylive_link = (
-        'newkso.ru' in clean_url.lower() or 
-        '/stream-' in clean_url.lower() or
-        # Aggiungiamo anche i pattern del vecchio estrattore per mantenere la compatibilità
-        re.search(r'/premium(\d+)/mono\.m3u8$', clean_url) is not None
+        'newkso.ru' in clean_url.lower() or
+        re.search(r'stream-\d+', clean_url.lower()) is not None
     )
 
     if not is_daddylive_link:
@@ -1169,7 +1153,7 @@ def resolve_m3u8_link(url, headers=None):
     final_headers_for_resolving = {**final_headers, **daddylive_headers}
 
     try:
-        github_url = 'https://raw.githubusercontent.com/nzo66/dlhd_url/refs/heads/main/dlhd.xml'
+        github_url = 'https://raw.githubusercontent.com/thecrewwh/dl_url/refs/heads/main/dl.xml'
         main_url_req = requests.get(
             github_url,
             timeout=10,  # Timeout ridotto per GitHub
