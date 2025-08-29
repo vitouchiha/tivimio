@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HLS Proxy - Playlist Builder</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent-color: #6366f1;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-white: #ffffff;
+            --bg-gray-50: #f9fafb;
+            --bg-gray-100: #f3f4f6;
+            --border-color: #e5e7eb;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+            --border-radius-lg: 16px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            background: var(--primary-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--bg-white);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+        }
+
+        .header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.05"><circle cx="30" cy="30" r="4"/></g></svg>');
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff 0%, #e2e8f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .nav-bar {
+            background: var(--bg-gray-50);
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--accent-color);
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            background: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .back-link:hover {
+            background: var(--accent-color);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-section {
+            background: var(--bg-gray-50);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .input, .textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            font-family: inherit;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .input:focus, .textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            line-height: 1.5;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .button.primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .button.primary:hover {
+            background: #5856eb;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .button.secondary {
+            background: var(--bg-gray-100);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .button.secondary:hover {
+            background: var(--bg-gray-50);
+            border-color: var(--accent-color);
+        }
+
+        .button.success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .button.success:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.25);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .info-card h3 {
+            color: var(--accent-color);
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 0;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .feature-list li::before {
+            content: '✨';
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .result-section {
+            background: #f8fafc;
+            border: 2px dashed var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            text-align: center;
+            color: var(--text-secondary);
+            margin-top: 30px;
+            transition: var(--transition);
+        }
+
+        .result-section.has-content {
+            background: white;
+            border: 2px solid var(--success-color);
+            color: var(--text-primary);
+        }
+
+        .result-url {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            word-break: break-all;
+            margin: 15px 0;
+            position: relative;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: var(--transition);
+        }
+
+        .result-url:hover {
+            border-color: var(--accent-color);
+        }
+
+        .result-url::after {
+            content: 'Clicca per copiare';
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-size: 11px;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .copy-helper {
+            position: absolute;
+            left: -9999px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: var(--border-radius);
+            margin: 15px 0;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .alert.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .alert.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .examples {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+        }
+
+        .examples h4 {
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .example-urls {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .copy-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .copy-modal.active {
+            display: flex;
+        }
+
+        .copy-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .copy-modal h3 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        .copy-modal-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .copy-modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-bar, .content {
+                padding: 20px;
+            }
+
+            .form-section {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .button {
+                justify-content: center;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Focus styles for accessibility */
+        .input:focus, .textarea:focus, .button:focus {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container fade-in">
+        <header class="header">
+            <h1>🎬 Playlist Builder</h1>
+            <p class="subtitle">Combina playlist multiple in un unico stream M3U ottimizzato</p>
+        </header>
+
+        <nav class="nav-bar">
+            <a href="/" class="back-link">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.42-1.41L7.83 13H20v-2z"/>
+                </svg>
+                Torna alla Home
+            </a>
+        </nav>
+
+        <main class="content">
+            <div class="info-card">
+                <h3>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Caratteristiche Avanzate
+                </h3>
+                <ul class="feature-list">
+                    <li>Riconoscimento automatico di #EXTVLCOPT e #EXTHTTP</li>
+                    <li>Gestione robusta delle connessioni con retry automatico</li>
+                    <li>Formato: M3U8 con proxy automatico integrato</li>
+                    <li>Compatibilità: VLC, IPTV players, Kodi</li>
+                    <li>Supporto nativo Vavoo, DaddyLive, HLS streams</li>
+                    <li>Headers personalizzati e autenticazione automatica</li>
+                </ul>
+            </div>
+
+            <form id="playlistForm" class="form-section">
+                <div class="form-group">
+                    <label class="label" for="playlistUrls">
+                        <svg class="icon" style="width: 16px; height: 16px; display: inline-block; margin-right: 6px;">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                        </svg>
+                        URL delle Playlist (separati da punto e virgola)
+                    </label>
+                    <textarea 
+                        id="playlistUrls" 
+                        class="textarea" 
+                        placeholder="Inserisci gli URL delle playlist separati da ';'&#10;Esempio:&#10;https://example1.com/playlist.m3u;https://example2.com/channels.m3u;https://vavoo.to/vavoo-iptv/play/12345"
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="button success">
+                        <svg class="icon" style="width: 18px; height: 18px;">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        Genera Playlist Combinata
+                    </button>
+                    
+                    <button type="button" id="clearBtn" class="button secondary">
+                        <svg class="icon" style="width: 18px; height: 18px;">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                        Pulisci
+                    </button>
+                </div>
+            </form>
+
+            <div class="examples">
+                <h4>📋 Esempi URL Supportati</h4>
+                <div class="example-urls">
+• Playlist M3U: https://provider.com/channels.m3u<br>
+• Vavoo Stream: https://vavoo.to/vavoo-iptv/play/12345<br>
+• DaddyLive: https://daddylive.sx/stream/stream-123.php<br>
+• HLS Diretto: https://server.com/stream.m3u8<br>
+• IPTV Provider: https://iptv.provider.com/playlist.m3u8
+                </div>
+            </div>
+
+            <div id="resultSection" class="result-section">
+                <svg class="icon" style="width: 48px; height: 48px; margin-bottom: 15px; opacity: 0.5;">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                </svg>
+                <h3>La playlist combinata apparirà qui</h3>
+                <p>Inserisci gli URL delle playlist e clicca "Genera" per creare la playlist unificata</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal per copia manuale -->
+    <div class="copy-modal" id="copyModal">
+        <div class="copy-modal-content">
+            <h3>🔗 Copia URL</h3>
+            <p>Seleziona tutto il testo qui sotto e copialo:</p>
+            <input type="text" class="copy-modal-input" id="copyInput" readonly>
+            <div class="copy-modal-buttons">
+                <button type="button" class="button primary" onclick="selectAllAndClose()">
+                    Seleziona e Chiudi
+                </button>
+                <button type="button" class="button secondary" onclick="closeCopyModal()">
+                    Chiudi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input helper per copia legacy -->
+    <input type="text" class="copy-helper" id="copyHelper">
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('playlistForm');
+            const clearBtn = document.getElementById('clearBtn');
+            const resultSection = document.getElementById('resultSection');
+            const playlistUrls = document.getElementById('playlistUrls');
+
+            // Handle form submission
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const urls = playlistUrls.value.trim();
+                if (!urls) {
+                    showAlert('Inserisci almeno un URL di playlist', 'error');
+                    return;
+                }
+
+                // Show loading state
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Generazione in corso...
+                    </div>
+                `;
+                submitBtn.disabled = true;
+
+                try {
+                    // Encode the URLs for the API call
+                    const encodedUrls = encodeURIComponent(urls);
+                    const playlistUrl = `${window.location.origin}/playlist?url=${encodedUrls}`;
+                    
+                    // Test the playlist URL
+                    const response = await fetch(playlistUrl);
+                    
+                    if (response.ok) {
+                        showResult(playlistUrl);
+                        showAlert('Playlist generata con successo! 🎉', 'success');
+                    } else {
+                        throw new Error(`Errore ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) {
+                    console.error('Errore nella generazione della playlist:', error);
+                    showAlert(`Errore nella generazione: ${error.message}`, 'error');
+                } finally {
+                    // Reset button state
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            });
+
+            // Handle clear button
+            clearBtn.addEventListener('click', function() {
+                playlistUrls.value = '';
+                clearResult();
+                clearAlerts();
+                playlistUrls.focus();
+            });
+
+            // Show result
+            function showResult(url) {
+                resultSection.classList.add('has-content');
+                resultSection.innerHTML = `
+                    <h3 style="color: var(--success-color); margin-bottom: 15px;">
+                        ✅ Playlist Generata con Successo!
+                    </h3>
+                    <p style="margin-bottom: 15px;">La tua playlist combinata è pronta. Copia l'URL qui sotto:</p>
+                    <div class="result-url" onclick="copyToClipboard('${url}')">${url}</div>
+                    <div class="button-group" style="justify-content: center; margin-top: 20px;">
+                        <a href="${url}" class="button primary" target="_blank">
+                            <svg class="icon" style="width: 18px; height: 18px;">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                            Apri Playlist
+                        </a>
+                        <button type="button" class="button secondary" onclick="copyToClipboard('${url}')">
+                            <svg class="icon" style="width: 18px; height: 18px;">
+                                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                            </svg>
+                            Copia URL
+                        </button>
+                    </div>
+                `;
+            }
+
+            // Clear result
+            function clearResult() {
+                resultSection.classList.remove('has-content');
+                resultSection.innerHTML = `
+                    <svg class="icon" style="width: 48px; height: 48px; margin-bottom: 15px; opacity: 0.5;">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                    </svg>
+                    <h3>La playlist combinata apparirà qui</h3>
+                    <p>Inserisci gli URL delle playlist e clicca "Genera" per creare la playlist unificata</p>
+                `;
+            }
+
+            // Show alert
+            function showAlert(message, type) {
+                clearAlerts();
+                const alert = document.createElement('div');
+                alert.className = `alert ${type}`;
+                alert.innerHTML = `
+                    <svg class="icon" style="width: 16px; height: 16px;">
+                        ${type === 'success' ? 
+                            '<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>' : 
+                            type === 'warning' ?
+                            '<path d="M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z"/>' :
+                            '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>'
+                        }
+                    </svg>
+                    ${message}
+                `;
+                
+                form.insertAdjacentElement('afterend', alert);
+                
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 5000);
+            }
+
+            // Clear alerts
+            function clearAlerts() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => alert.remove());
+            }
+
+            // Add smooth animations
+            const inputs = document.querySelectorAll('.input, .textarea');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.style.transform = 'translateY(-1px)';
+                    this.style.boxShadow = '0 4px 12px rgba(99, 102, 241, 0.15)';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = 'none';
+                });
+            });
+        });
+
+        // Sistema di copia migliorato con fallback multipli
+        async function copyToClipboard(text) {
+            let success = false;
+
+            // Metodo 1: Moderna API Clipboard (richiede HTTPS)
+            if (navigator.clipboard && window.isSecureContext) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    success = true;
+                    showAlert('✅ URL copiato negli appunti!', 'success');
+                } catch (err) {
+                    console.log('Clipboard API fallita:', err);
+                }
+            }
+
+            // Metodo 2: Fallback con execCommand (deprecato ma funziona)
+            if (!success) {
+                try {
+                    const copyHelper = document.getElementById('copyHelper');
+                    copyHelper.value = text;
+                    copyHelper.style.position = 'fixed';
+                    copyHelper.style.left = '0px';
+                    copyHelper.style.opacity = '1';
+                    copyHelper.select();
+                    copyHelper.setSelectionRange(0, 99999);
+                    
+                    const successful = document.execCommand('copy');
+                    copyHelper.style.position = 'absolute';
+                    copyHelper.style.left = '-9999px';
+                    copyHelper.style.opacity = '0';
+                    
+                    if (successful) {
+                        success = true;
+                        showAlert('✅ URL copiato negli appunti!', 'success');
+                    }
+                } catch (err) {
+                    console.log('execCommand fallito:', err);
+                }
+            }
+
+            // Metodo 3: Modal per copia manuale
+            if (!success) {
+                showCopyModal(text);
+                showAlert('💡 Usa il modal per copiare manualmente', 'warning');
+            }
+        }
+
+        // Modal per copia manuale
+        function showCopyModal(text) {
+            const modal = document.getElementById('copyModal');
+            const input = document.getElementById('copyInput');
+            input.value = text;
+            modal.classList.add('active');
+            
+            // Auto-seleziona il testo
+            setTimeout(() => {
+                input.select();
+                input.setSelectionRange(0, 99999);
+            }, 100);
+        }
+
+        function closeCopyModal() {
+            document.getElementById('copyModal').classList.remove('active');
+        }
+
+        function selectAllAndClose() {
+            const input = document.getElementById('copyInput');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            
+            // Prova ancora una volta a copiare
+            try {
+                document.execCommand('copy');
+                showAlert('✅ URL copiato negli appunti!', 'success');
+            } catch (err) {
+                showAlert('📋 Testo selezionato! Premi Ctrl+C per copiare', 'warning');
+            }
+            
+            setTimeout(closeCopyModal, 1500);
+        }
+
+        // Chiudi modal cliccando fuori
+        document.getElementById('copyModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCopyModal();
+            }
+        });
+
+        // Scorciatoia da tastiera ESC per chiudere modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeCopyModal();
+            }
+        });
+
+        // Funzione helper per show alert (necessaria per il scope globale)
+        function showAlert(message, type) {
+            const existingAlerts = document.querySelectorAll('.alert');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            const alert = document.createElement('div');
+            alert.className = `alert ${type}`;
+            alert.innerHTML = `
+                <svg class="icon" style="width: 16px; height: 16px;">
+                    ${type === 'success' ? 
+                        '<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>' : 
+                        type === 'warning' ?
+                        '<path d="M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z"/>' :
+                        '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>'
+                    }
+                </svg>
+                ${message}
+            `;
+            
+            const form = document.getElementById('playlistForm');
+            form.insertAdjacentElement('afterend', alert);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

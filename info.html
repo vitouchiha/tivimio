@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Info - HLS Proxy Server</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent-color: #6366f1;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-white: #ffffff;
+            --bg-gray-50: #f9fafb;
+            --bg-gray-100: #f3f4f6;
+            --border-color: #e5e7eb;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+            --border-radius-lg: 16px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            background: var(--primary-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--bg-white);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff 0%, #e2e8f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .nav-bar {
+            background: var(--bg-gray-50);
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--accent-color);
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            background: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .back-link:hover {
+            background: var(--accent-color);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card h2 {
+            color: var(--accent-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h3 {
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 25px 0 15px 0;
+            border-bottom: 2px solid var(--bg-gray-100);
+            padding-bottom: 8px;
+        }
+
+        .card p {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 20px 0;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow-x: auto;
+        }
+
+        .code-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin: 4px 8px 4px 0;
+        }
+
+        .badge.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .badge.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .badge.info {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--accent-color);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .feature-list li::before {
+            content: '✨';
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .endpoint-card {
+            background: linear-gradient(135deg, var(--bg-gray-50) 0%, white 100%);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success-color);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .footer {
+            background: var(--bg-gray-50);
+            padding: 30px 40px;
+            text-align: center;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .version-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: var(--border-radius);
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-bar, .content, .footer {
+                padding: 20px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .code-block {
+                padding: 15px;
+                font-size: 13px;
+            }
+        }
+
+        /* Loading animation */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Focus styles for accessibility */
+        .back-link:focus, .card:focus {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container fade-in">
+        <header class="header">
+            <h1>🚀 HLS Proxy Server</h1>
+            <p class="subtitle">Documentazione completa e informazioni tecniche</p>
+        </header>
+
+        <nav class="nav-bar">
+            <a href="/" class="back-link">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.42-1.41L7.83 13H20v-2z"/>
+                </svg>
+                Torna alla Home
+            </a>
+        </nav>
+
+        <main class="content">
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                Server Operativo
+            </div>
+
+            <div class="grid">
+                <div class="card endpoint-card">
+                    <h2>
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        Endpoint Principali
+                    </h2>
+                    
+                    <h3>🔄 Proxy Universale</h3>
+                    <div class="code-block">GET /proxy?url=&lt;STREAM_URL&gt;
+
+Supporta:
+• HLS (.m3u8) - Streaming live e VOD
+• M3U playlist - Liste canali IPTV  
+• MPD (DASH) - Streaming adattivo
+• PHP streams - Flussi dinamici
+
+Esempio:
+/proxy?url=https://example.com/stream.m3u8</div>
+
+                    <h3>🎬 Estrazione Vavoo</h3>
+                    <div class="code-block">GET /vavoo?url=&lt;URL_VAVOO&gt;
+
+Risolve automaticamente:
+• Link vavoo.to in stream diretti
+• Autenticazione API automatica
+• Headers ottimizzati per streaming</div>
+
+                    <h3>📡 Risoluzione DaddyLive HD</h3>
+                    <div class="code-block">GET /dlhd?url=&lt;URL_DADDYLIVE&gt;
+
+Funzionalità:
+• Risoluzione link DaddyLive HD
+• Bypass automatico restrizioni
+• Ottimizzazione qualità stream</div>
+                </div>
+
+                <div class="card">
+                    <h2>
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                        </svg>
+                        Caratteristiche Avanzate
+                    </h2>
+                    
+                    <ul class="feature-list">
+                        <li>Gestione automatica AES-128 per chiavi crittografiche</li>
+                        <li>Supporto completo #EXTVLCOPT e #EXTHTTP</li>
+                        <li>Retry automatico con exponential backoff</li>
+                        <li>Connection pooling per prestazioni ottimali</li>
+                        <li>Headers personalizzati con prefisso h_</li>
+                        <li>Proxy trasparente per segmenti .ts</li>
+                        <li>Compatibilità universale player IPTV</li>
+                        <li>Sessioni persistenti anti-bot</li>
+                    </ul>
+
+                    <div style="margin-top: 20px;">
+                        <span class="badge success">HLS</span>
+                        <span class="badge success">M3U8</span>
+                        <span class="badge success">MPD</span>
+                        <span class="badge success">PHP</span>
+                        <span class="badge info">Vavoo</span>
+                        <span class="badge info">DLHD</span>
+                        <span class="badge warning">AES-128</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Headers Personalizzati
+                    </h2>
+                    <p>Aggiungi headers custom con prefisso <code>h_</code>:</p>
+                    
+                    <div class="code-block">?url=STREAM_URL&h_user-agent=CustomUA&h_referer=https://site.com&h_authorization=Bearer token123
+
+Headers supportati:
+• h_user-agent - User Agent personalizzato
+• h_referer - Sito di riferimento  
+• h_authorization - Token di autorizzazione
+• h_origin - Dominio origine
+• h_* - Qualsiasi header personalizzato</div>
+                </div>
+
+                <div class="card">
+                    <h2>
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.18 1.75-.48 2.54l2.6 1.53c.56-1.24.88-2.62.88-4.07 0-5.18-3.95-9.45-9-9.95zM12 19c-3.87 0-7-3.13-7-7 0-3.53 2.61-6.43 6-6.92V2.05c-5.06.5-9 4.76-9 9.95 0 5.52 4.47 10 9.99 10 3.31 0 6.24-1.61 8.06-4.09l-2.6-1.53C16.17 17.98 14.21 19 12 19z"/>
+                        </svg>
+                        Playlist Builder
+                    </h2>
+                    <p>Combina multiple playlist in un unico stream M3U:</p>
+                    
+                    <div class="code-block">GET /builder
+
+Interfaccia completa per:
+✅ Combinare playlist multiple
+✅ Gestione automatica Vavoo e DLHD
+✅ Proxy automatico per tutti gli stream
+✅ Compatibilità VLC, Kodi, IPTV players
+
+Formato output: M3U8 con proxy integrato</div>
+                </div>
+
+                <div class="card">
+                    <h2>
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        Compatibilità Player
+                    </h2>
+                    
+                    <ul class="feature-list">
+                        <li>VLC Media Player (tutte le versioni)</li>
+                        <li>Kodi con plugin IPTV</li>
+                        <li>IPTV Smarters Pro</li>
+                        <li>TiviMate IPTV Player</li>
+                        <li>Perfect Player IPTV</li>
+                        <li>GSE Smart IPTV</li>
+                        <li>Browser web moderni</li>
+                        <li>App native iOS/Android</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h2>
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        Architettura Sistema
+                    </h2>
+                    
+                    <div class="code-block">🏗️ Stack Tecnologico:
+• Python 3.11+ (FastAPI/aiohttp)
+• Server ASGI asincrono (Uvicorn)
+• Connection pooling HTTP/2
+• Gestione sessioni persistenti
+• Anti-bot detection bypass
+
+⚡ Performance:
+• Latenza < 50ms overhead
+• 1000+ connessioni simultanee
+• Memoria: 50-200MB tipico
+• Throughput illimitato
+• DNS caching integrato</div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p><strong>HLS Proxy Server</strong> - Proxy universale per streaming</p>
+            <div class="version-info">
+                <svg class="icon" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                    <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0L19.2 12l-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
+                </svg>
+                Versione 2.5.0
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Add smooth scrolling and interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate cards on scroll
+            const cards = document.querySelectorAll('.card');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.animation = 'fadeIn 0.6s ease-out forwards';
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            cards.forEach(card => {
+                observer.observe(card);
+            });
+
+            // Copy code blocks on click
+            const codeBlocks = document.querySelectorAll('.code-block');
+            codeBlocks.forEach(block => {
+                block.style.cursor = 'pointer';
+                block.title = 'Clicca per copiare';
+                
+                block.addEventListener('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(block.textContent);
+                        const originalBg = block.style.backgroundColor;
+                        block.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+                        setTimeout(() => {
+                            block.style.backgroundColor = originalBg;
+                        }, 300);
+                    } catch (err) {
+                        console.log('Clipboard not available');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
