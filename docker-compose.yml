@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  tvproxy:
+    build: .
+    container_name: tvproxy
+    ports:
+      - "7860:7860"
+    restart: unless-stopped
+
